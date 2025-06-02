@@ -68,9 +68,9 @@ for i in range(51):
 
 quantile=np.linspace(10, 100,num=10)
 
-nn=255 # number of work day in a year
+n1=255 # number of work day in a year
 
-t=np.linspace(1, 24*nn,num=24*nn)
+t=np.linspace(1, 24*n1,num=24*n1)
 
 
 nn_T=1       # T period [number  of days]
@@ -143,29 +143,29 @@ for i in range(9):
     
     # Validation of Fourier quantile regression
     
-    plt.plot(t[1:24*nn],school_train_work[1:24*nn],'k-', label='Actual')
+    plt.plot(t[1:24*n1],school_train_work[1:24*n1],'k-', label='Actual')
     xx=[muu.x+C[i].x+D[i].x for i in range(len(t))] 
-    plt.plot(t[1:24*nn],xx[1:24*nn],'r-', label='Fitted')
+    plt.plot(t[1:24*n1],xx[1:24*n1],'r-', label='Fitted')
     plt.legend(loc='upper right')
     plt.xlabel("Time [hrs]")
     plt.ylabel("Demand [kWh]")
     plt.show()
     
     
-    nn=7
-    plt.plot(t[1:24*nn],school_train_work[1:24*nn],'k-', label='Actual')
+    n1=7
+    plt.plot(t[1:24*n1],school_train_work[1:24*n1],'k-', label='Actual')
     xx=[muu.x+C[i].x+D[i].x for i in range(len(t))] 
-    plt.plot(t[1:24*nn],xx[1:24*nn],'r-', label='Fitted')
+    plt.plot(t[1:24*n1],xx[1:24*n1],'r-', label='Fitted')
     plt.legend(loc='upper right')
     plt.xlabel("Time [hrs]")
     plt.ylabel("Demand [kWh]")
     plt.show()
     
     
-    nn=nn_T
-    plt.plot(t[1:24*nn],school_train_work[1:24*nn],'k-', label='Actual')
+    n1=nn_T
+    plt.plot(t[1:24*n1],school_train_work[1:24*n1],'k-', label='Actual')
     xx=[muu.x+C[i].x+D[i].x for i in range(len(t))] 
-    plt.plot(t[1:24*nn],xx[1:24*nn],'r-', label='Fitted')
+    plt.plot(t[1:24*n1],xx[1:24*n1],'r-', label='Fitted')
     plt.legend(loc='upper right')
     plt.xlabel("Time [hrs]")
     plt.ylabel("Demand [kWh]")
@@ -173,7 +173,7 @@ for i in range(9):
 
 
     # Storing the quantile 
-    demand_quantile[i,:]=xx[0:24*nn]
+    demand_quantile[i,:]=xx[0:24*n1]
 
 
 
@@ -447,12 +447,7 @@ for J1 in [6,8,10]:
             
             # GANs
             
-            
-            # ========== SYNTHETIC DATA ==========
-            np.random.seed(42)
-            data = np.sin(np.linspace(0, 100, 1000)) + np.random.normal(0, 0.2, 1000)
             data=school_train_work
-            
             scaler = MinMaxScaler()
             data = scaler.fit_transform(data.reshape(-1, 1)).flatten()
             
@@ -485,9 +480,6 @@ for J1 in [6,8,10]:
             
             X_test, y_test = create_sequences(data)
             
-            
-            
-        
             
             # ========== GENERATOR ==========
             class Generator(nn.Module):
@@ -745,8 +737,6 @@ for J1 in [6,8,10]:
                     
 
             
-            
-            
             def mean_squared_error(x, y):
                 if len(x) != len(y):
                     raise ValueError("Lists x and y must have the same length.")
@@ -755,29 +745,25 @@ for J1 in [6,8,10]:
             if PANs:
                 PANs_MSE=mean_squared_error(XX_all,YY_all)
                 print('PANs-MSE = ',PANs_MSE) 
-                
                 m_PANs=transition_matrix(get_quantile_sequence(XX_all, demand_quantile))
        
             else:
                 NN_MSE=mean_squared_error(XX_all,YY_all)
                 print('NN-MSE = ', NN_MSE)      
-                
                 m=transition_matrix(get_quantile_sequence(XX_all, demand_quantile))     
                                 
             
             if PANs==False:    
                 print((NN_MSE-PANs_MSE)/NN_MSE*100)
                 # Calculate distances
-                dist_PANs = frobenius_norm(m_PANs, actual_matrix)
-                dist_= frobenius_norm(m, actual_matrix)
+                dist_PANs = frobenius_norm(m_PANs, real_tpm)
+                dist_= frobenius_norm(m, real_tpm)
 
                 dist_PANs_all.append(dist_PANs)
                 dist_all.append(dist_)
                 
                 
-                
-           
-                
+                      
 plt.plot(dist_PANs_all,'kx')
 plt.plot(dist_all,'ro')                
                 
