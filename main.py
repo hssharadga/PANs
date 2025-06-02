@@ -16,22 +16,20 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import copy
 import random
+import gurobipy as gp
+from gurobipy import GRB
+import random
+# Time Count
+import timeit
+start = timeit.default_timer()
 
-# >>
 
-# functions
 # Calculate Frobenius norms
 def frobenius_norm(matrix1, matrix2):
     return np.linalg.norm(matrix1 - matrix2)
 
 
-import gurobipy as gp
-from gurobipy import GRB
 
-
-# Time Count
-import timeit
-start = timeit.default_timer()
 
 
 # A: Import School Results
@@ -69,9 +67,7 @@ for i in range(51):
 quantile=np.linspace(10, 100,num=10)
 
 n1=255 # number of work day in a year
-
 t=np.linspace(1, 24*n1,num=24*n1)
-
 
 nn_T=1       # T period [number  of days]
 # nn_T=20*3  ~ 3 month
@@ -91,23 +87,19 @@ matrix1=np.zeros((len(t),n))
 matrix2=np.zeros((len(t),n))
 for i in range (n):
     matrix1[:,i]=np.cos((i+1)*w*t);  # % cos matrix
-    matrix2[:,i]=np.sin((i+1)*w*t); # % sin matrix
+    matrix2[:,i]=np.sin((i+1)*w*t);  # % sin matrix
 
     
 # Fourier quantile regression
 demand_quantile=np.zeros((9,24))
 for i in range(9):
-    
     T=1-0.1*(i+1) # quantile (beta)
-
-
     m=gp.Model()
     muu=m.addVar(vtype='C',lb=-GRB.INFINITY,  name='muu')  
     A=m.addVars(n, lb=-GRB.INFINITY, vtype='C', name='A')
     B=m.addVars(n, lb=-GRB.INFINITY, vtype='C', name='B')
     C=m.addVars(len(t), lb=-GRB.INFINITY, vtype='C', name='C')
     D=m.addVars(len(t), lb=-GRB.INFINITY, vtype='C', name='D')
-    
 
     # add auxiliary variables for max function
     auxvarpos=m.addVars(len(t), lb=-GRB.INFINITY, vtype='C', name='auxvarpos')
@@ -128,21 +120,17 @@ for i in range(9):
      
     m.setObjective((T*obj1+(1-T)*obj2)/len(t)) 
     
-    
     # Wrong version:
     # obj1=gp.quicksum(T*np.max((school_train_work[i]-muu-C[i]-D[i]),0)         for i in range(len(t))) 
     # obj2=gp.quicksum((1-T)*np.max(-1*(school_train_work[i]-muu-C[i]-D[i]),0)  for i in range(len(t)))  
     # m.setObjective(obj1+obj2) 
-    
     
     m.addConstrs( C[i]== gp.quicksum(A[k]*matrix1[i][k] for k in range (n)) for i in range (len(t))) 
     m.addConstrs( D[i]== gp.quicksum(B[k]*matrix2[i][k] for k in range (n)) for i in range (len(t))) 
     
     m.optimize()
     
-    
     # Validation of Fourier quantile regression
-    
     plt.plot(t[1:24*n1],school_train_work[1:24*n1],'k-', label='Actual')
     xx=[muu.x+C[i].x+D[i].x for i in range(len(t))] 
     plt.plot(t[1:24*n1],xx[1:24*n1],'r-', label='Fitted')
@@ -195,7 +183,6 @@ plt.show()
 
 
 # C: Porbabilty Transistion Matrix for demand quantiles
-
 n_day=255
 # Determing the quantile at every steps
 qunatiles=np.zeros((n_day,24)) # 255 days and 24 hours
@@ -219,9 +206,6 @@ for i in range (n_day):
         qunatiles[i,j]=np.round(quant,1)
 
 
-        
-
-
 # Porbabilty Transistion Matrix
 qunatiles=np.reshape(qunatiles,(1,n_day*24)) 
 
@@ -229,7 +213,6 @@ def transition_matrix(transitions):
     n = 9 #number of states
 
     transitions=[ int(transitions[0][i]*10-1) for i in range(len(qunatiles[0])) ] # 0.1 will be 0, 0.2 will be 1, 0.3 will be 2
-    
     M = np.zeros((n,n))   # Porbabilty Transistion Matrix
 
     for (i,j) in zip(transitions,transitions[1:]):
@@ -245,7 +228,6 @@ for row in M: print(' '.join(f'{x:.2f}' for x in row))
 mm=np.round(M,2)                   # Porbabilty Transistion Matrix
 
 
-
 # Plot the Porbabilty Transistion Matrix
 fig, ax = plt.subplots()
 min_val, max_val = 0.1, 0.9
@@ -258,10 +240,13 @@ for i in range(9):
     for j in range(9):
         c = intersection_matrix[j,i]
         ax.text(i, j, str(c), va='center', ha='center', fontsize=10)
-        
+plt.show()        
         
 
+
+
 # PANs
+
 W=0.01
 disc=0
 disc_rate=0.001
@@ -271,9 +256,6 @@ nnn=2
 dist_PANs_all=[]
 dist_all=[]
 
-# for J1 in [8]:
-#     for i1 in [1]:
-        
 for J1 in [6,8,10]:
     for i1 in [1,2,3,4]:
 
@@ -299,9 +281,7 @@ for J1 in [6,8,10]:
             HIDDEN_SIZE = 10
             # PANs=False
             
-            ##########################
-            # A: Import School Results
-            ##########################
+            #  Import School Results
             
             school=pd.read_csv(r'C:\Users\Hussein Sharadga\Desktop\Postdoc Files\UMass\Markov Chain\school.csv')
             school_test=school[329088-96*365+96*4-1:329088-2]# Load profile for one year, starts on January 1, 2010 at 12:00 AM (00:00 in 24 hr style)
@@ -446,7 +426,6 @@ for J1 in [6,8,10]:
             
             
             # GANs
-            
             data=school_train_work
             scaler = MinMaxScaler()
             data = scaler.fit_transform(data.reshape(-1, 1)).flatten()
@@ -481,7 +460,7 @@ for J1 in [6,8,10]:
             X_test, y_test = create_sequences(data)
             
             
-            # ========== GENERATOR ==========
+            # GENERATOR 
             class Generator(nn.Module):
                 def __init__(self):
                     super().__init__()
@@ -496,6 +475,8 @@ for J1 in [6,8,10]:
                     # print('--------')
                     #print(out)
                     return out
+                
+                
                         
             class Discriminator(nn.Module):
                 def __init__(self, quantiles=9):
@@ -705,11 +686,6 @@ for J1 in [6,8,10]:
                         return prediction.numpy()  # shape (3,)
             
             
-            import random
-            i = random.randint(0, 6112)  # inclusive of both 0 and 6112
-            
-    
-            
             def mean_squared_error(x, y):
                 if len(x) != len(y):
                     raise ValueError("Lists x and y must have the same length.")
@@ -744,12 +720,12 @@ for J1 in [6,8,10]:
             
             if PANs:
                 PANs_MSE=mean_squared_error(XX_all,YY_all)
-                print('PANs-MSE = ',PANs_MSE) 
+                # print('PANs-MSE = ',PANs_MSE) 
                 m_PANs=transition_matrix(get_quantile_sequence(XX_all, demand_quantile))
        
             else:
                 NN_MSE=mean_squared_error(XX_all,YY_all)
-                print('NN-MSE = ', NN_MSE)      
+                # print('NN-MSE = ', NN_MSE)      
                 m=transition_matrix(get_quantile_sequence(XX_all, demand_quantile))     
                                 
             
@@ -762,12 +738,6 @@ for J1 in [6,8,10]:
                 dist_PANs_all.append(dist_PANs)
                 dist_all.append(dist_)
                 
-                
-                      
+plt.plot(dist_all,'ro')                      
 plt.plot(dist_PANs_all,'kx')
-plt.plot(dist_all,'ro')                
-                
-                
-
-
-
+plt.show()               
