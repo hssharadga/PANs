@@ -1,5 +1,5 @@
-# Code Repository: *Probabilistic-Adversarial Networks (PANs)*  
-### A Probability-Informed Deep Learning Approach for Electrical Demand Forecasting
+### Code Repository: *Probabilistic-Adversarial Networks (PANs)*  
+A Probability-Informed Deep Learning Approach for Electrical Demand Forecasting
 
 This repository contains the implementation associated with the following conference paper:
 
